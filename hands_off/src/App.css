@@ -4,3 +4,18 @@
   align-items: center;
   justify-content: center;
 }
+
+.video {
+  width: 640px;
+  height: 480px;
+  background-color: black;
+}
+
+.control {
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px;
+  margin: 20px;
+}
