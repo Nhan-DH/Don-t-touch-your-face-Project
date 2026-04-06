@@ -30,38 +30,39 @@ function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [statusText, setStatusText] = useState("Initializing camera and model...");
 
-  const init = async () => {
-    console.log("init....");
-    setStatusText("Requesting webcam access...");
-    await setupWebcam();
-    console.log("webcam ready....");
-
-    // Ensure a TensorFlow backend is available before loading models.
-    await tf.setBackend("webgl").catch(() => tf.setBackend("cpu"));
-    await tf.ready();
-
-
-    mobilenetRef.current = await mobilenet.load();
-    classifierRef.current = knnClassifier.create();
-    console.log("tf backend:", tf.getBackend());
-    console.log("set up done....");
-    console.log("kkhong cham ten len mat va bam nut train 1....");
-    setStatusText("Ready. Train both classes to begin monitoring.");
-    initNotifications({ cooldown: 3000 });
-  }
-
   useEffect(() => {
+    const webcamElement = webcamRef.current;
+
+    const init = async () => {
+      console.log("init....");
+      setStatusText("Requesting webcam access...");
+      await setupWebcam();
+      console.log("webcam ready....");
+
+      // Ensure a TensorFlow backend is available before loading models.
+      await tf.setBackend("webgl").catch(() => tf.setBackend("cpu"));
+      await tf.ready();
+
+      mobilenetRef.current = await mobilenet.load();
+      classifierRef.current = knnClassifier.create();
+      console.log("tf backend:", tf.getBackend());
+      console.log("set up done....");
+      console.log("kkhong cham ten len mat va bam nut train 1....");
+      setStatusText("Ready. Train both classes to begin monitoring.");
+      initNotifications({ cooldown: 3000 });
+    };
+
     init();
 
     return () => {
       isRunningRef.current = false;
       alertSound.stop();
       setIsRunning(false);
-      const stream = webcamRef.current?.srcObject;
+      const stream = webcamElement?.srcObject;
       if (stream?.getTracks) {
         stream.getTracks().forEach((track) => track.stop());
       }
-    }
+    };
   }, []);
   const train = async label => {
     if (!mobilenetRef.current || !classifierRef.current || !webcamRef.current) {
