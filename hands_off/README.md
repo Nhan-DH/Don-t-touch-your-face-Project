@@ -1,7 +1,8 @@
 # Hands Off
 
 This React application uses a webcam and TensorFlow.js to detect face-touching behavior in real time. The goal of the project is to help users reduce the habit of touching their face, which can contribute to lowering the risk of spreading germs through the hands, especially in disease-prevention contexts.
-
+## 🔗 Live Demo
+https://don-t-touch-your-face-project.vercel.app/
 ## Project Goals
 
 - Track live video from the browser camera.
