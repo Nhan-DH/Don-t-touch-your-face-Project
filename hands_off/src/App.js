@@ -7,6 +7,11 @@ import * as mobilenet from "@tensorflow-models/mobilenet";
 import * as knnClassifier from "@tensorflow-models/knn-classifier";
 import { Howl } from "howler";
 import soundURL from "./assets/sound.mp3";
+import AppHeader from "./components/AppHeader";
+import VideoPanel from "./components/VideoPanel";
+import ControlPanel from "./components/ControlPanel";
+import StatusPanel from "./components/StatusPanel";
+import UsageGuide from "./components/UsageGuide";
 const alertSound = new Howl({
   src: [soundURL]
 });
@@ -23,8 +28,11 @@ function App() {
 
   const [isTouched, setIsTouched] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [statusText, setStatusText] = useState("Initializing camera and model...");
+
   const init = async () => {
     console.log("init....");
+    setStatusText("Requesting webcam access...");
     await setupWebcam();
     console.log("webcam ready....");
 
@@ -38,8 +46,10 @@ function App() {
     console.log("tf backend:", tf.getBackend());
     console.log("set up done....");
     console.log("kkhong cham ten len mat va bam nut train 1....");
+    setStatusText("Ready. Train both classes to begin monitoring.");
     initNotifications({ cooldown: 3000 });
   }
+
   useEffect(() => {
     init();
 
@@ -56,37 +66,54 @@ function App() {
   const train = async label => {
     if (!mobilenetRef.current || !classifierRef.current || !webcamRef.current) {
       console.log("Model/chclassifier/webcam chua san sang");
+      setStatusText("Model or webcam is not ready yet.");
       return;
     }
+
+    setStatusText(`Training ${label} samples...`);
 
     for (let i = 0; i < trainingTime; i++) {
       console.log(`Progress ${Math.floor((i + 1) / trainingTime * 100)}%`);
       await training(label);
     }
+
+    const classExampleCount = classifierRef.current.getClassExampleCount();
+    const safeCount = classExampleCount[NOT_TOUCHED_LABEL] || 0;
+    const touchCount = classExampleCount[TOUCHED_LABEL] || 0;
+    setStatusText(`Training complete. not_touched: ${safeCount}, touched: ${touchCount}`);
   }
+
   const training = async (label) => {
     const embedding = mobilenetRef.current.infer(webcamRef.current, true);
     classifierRef.current.addExample(embedding, label);
     embedding.dispose();
     await sleep(100);
   }
+
   const run = async () => {
     if (!mobilenetRef.current || !classifierRef.current || !webcamRef.current) {
       console.log("Model/chclassifier/webcam chua san sang");
+      setStatusText("Model or webcam is not ready yet.");
       return;
     }
+
     const classExampleCount = classifierRef.current.getClassExampleCount();
     if (!classExampleCount[NOT_TOUCHED_LABEL] || !classExampleCount[TOUCHED_LABEL]) {
       console.log("Can train du ca 2 nhan truoc khi Run");
+      setStatusText("Please train both classes before running.");
       return;
     }
+
     if (isRunningRef.current) {
       console.log("Dang run roi");
+      setStatusText("Monitoring is already running.");
       return;
     }
 
     isRunningRef.current = true;
     setIsRunning(true);
+    setStatusText("Monitoring started.");
+
     while (isRunningRef.current) {
       const embedding = mobilenetRef.current.infer(webcamRef.current, true);
       const result = await classifierRef.current.predictClass(embedding);
@@ -97,11 +124,13 @@ function App() {
         console.log("Touched");
         alertSound.play();
         notify("Don't touch your face!", { body: "You just touched your face!" });
+        setStatusText("Warning: touch detected.");
       }
 
       if (!touchedNow) {
         console.log("Not touched");
         alertSound.stop();
+        setStatusText("Monitoring: no touch detected.");
       }
 
       wasTouchedRef.current = touchedNow;
@@ -112,11 +141,15 @@ function App() {
     setIsTouched(false);
     wasTouchedRef.current = false;
     setIsRunning(false);
+    setStatusText("Monitoring stopped.");
   }
+
   const stopRun = () => {
     isRunningRef.current = false;
     alertSound.stop();
+    setStatusText("Stopping monitor...");
   }
+
   const sleep = (ms = 100) => {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -154,23 +187,26 @@ function App() {
 
 
   return (
-    <div className={`main ${isTouched ? "touched" : ""}`}>
+    <div className={`app-shell ${isTouched ? "touched" : ""}`}>
+      <div className="backdrop" />
+      <main className="app-frame">
+        <AppHeader isTouched={isTouched} isRunning={isRunning} />
+        <UsageGuide />
 
-      <h1 style={{ fontSize: "40px" }}>Hands off App</h1>
-      <video
-        ref={webcamRef}
-        className="video"
-        autoPlay
-      />
-      <div className="control">
-        <button className="btn" onClick={() => train(NOT_TOUCHED_LABEL)}>Train 1</button>
-        <button className="btn" onClick={() => train(TOUCHED_LABEL)}>Train 2</button>
-        <button className="btn" onClick={() => { run() }}>Run</button>
-        <button className="btn" onClick={stopRun} disabled={!isRunning}>Stop</button>
-      </div>
-
-
-
+        <div className="layout-grid">
+          <VideoPanel webcamRef={webcamRef} isTouched={isTouched} />
+          <div className="right-column">
+            <ControlPanel
+              isRunning={isRunning}
+              onTrainSafe={() => train(NOT_TOUCHED_LABEL)}
+              onTrainTouch={() => train(TOUCHED_LABEL)}
+              onRun={run}
+              onStop={stopRun}
+            />
+            <StatusPanel statusText={statusText} />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

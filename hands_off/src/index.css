@@ -5,5 +5,14 @@
 }
 
 html {
-  font-size: 62.5%;
+  font-size: 16px;
+}
+
+body {
+  min-height: 100vh;
+  font-family: "Segoe UI", "Trebuchet MS", "Verdana", sans-serif;
+}
+
+#root {
+  min-height: 100vh;
 }
