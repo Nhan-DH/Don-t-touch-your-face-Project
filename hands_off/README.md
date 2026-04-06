@@ -1,70 +1,157 @@
-# Getting Started with Create React App
+# Hands Off
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This React application uses a webcam and TensorFlow.js to detect face-touching behavior in real time. The goal of the project is to help users reduce the habit of touching their face, which can contribute to lowering the risk of spreading germs through the hands, especially in disease-prevention contexts.
 
-## Available Scripts
+## Project Goals
 
-In the project directory, you can run:
+- Track live video from the browser camera.
+- Quickly train two basic labels: `not_touched` and `touched`.
+- Predict in real time whether the user is touching their face.
+- Play sound and show notifications when face-touching is detected.
+- Provide a clear interface with usage instructions for new users.
 
-### `npm start`
+## What the App Can Do
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 1. Access the live camera
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The app requests webcam access from the browser and displays the user's camera feed on screen.
 
-### `npm test`
+### 2. Train data directly in the browser
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The app uses MobileNet as the feature extractor and a KNN Classifier to distinguish two states:
 
-### `npm run build`
+- `not_touched`: not touching the face
+- `touched`: touching the face
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Users can press the training buttons for each label to collect samples while using the app.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 3. Run real-time prediction
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+After both classes have been trained, the user presses `Run` to begin live monitoring. If the system detects `touched` with sufficient confidence, the app will:
 
-### `npm run eject`
+- play an alert sound,
+- send a browser notification,
+- update the UI to indicate that face-touching is happening.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 4. Stop alerting immediately when the hand is removed
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+When the user removes their hand from the face, the sound stops immediately and the state returns to normal.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 5. The UI is split into components
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The interface has been broken into separate components for easier maintenance:
 
-## Learn More
+- `AppHeader`
+- `VideoPanel`
+- `ControlPanel`
+- `UsageGuide`
+- `StatusPanel`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## How This Project Helps with Disease Prevention
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Touching the face is one of the behaviors that increases the risk of transferring bacteria or viruses from the hands to the eyes, nose, or mouth. This app does not replace official health measures, but it can serve as a behavioral reminder that helps users become more aware of unconscious face-touching.
 
-### Code Splitting
+In environments that require stronger hygiene and prevention measures, such as:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- classrooms,
+- offices,
+- research labs,
+- public areas,
 
-### Analyzing the Bundle Size
+the app can be used as a tool to support personal behavior awareness.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Technologies Used
 
-### Making a Progressive Web App
+- React
+- TensorFlow.js
+- `@tensorflow-models/mobilenet`
+- `@tensorflow-models/knn-classifier`
+- Howler.js
+- Browser Notifications
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Main Structure
 
-### Advanced Configuration
+```text
+src/
+  App.js
+  App.css
+  index.css
+  components/
+    AppHeader.jsx
+    VideoPanel.jsx
+    ControlPanel.jsx
+    StatusPanel.jsx
+    UsageGuide.jsx
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## How to Run Locally
 
-### Deployment
+### Requirements
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- Node.js and npm installed
+- A browser that supports webcam access
+- Camera permission enabled when prompted
 
-### `npm run build` fails to minify
+### Install
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm install
+```
+
+### Start Development Mode
+
+```bash
+npm start
+```
+
+Open the browser at:
+
+```text
+http://localhost:3000
+```
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+The `build/` folder will be generated and can be deployed to static hosting.
+
+## How to Use
+
+1. Open the app and allow browser camera access.
+2. Place your face in the center of the frame.
+3. Click `Train: Not Touched` while you are not touching your face.
+4. Click `Train: Touched` when you place your hand on your face.
+5. Click `Run` to start monitoring.
+6. When the app detects face-touching, it will alert you with sound and notifications.
+7. Click `Stop` to stop monitoring.
+
+## Tips for Better Training
+
+- Stand in a well-lit place.
+- Keep the camera stable.
+- Collect enough samples for both labels.
+- Avoid training too quickly or using too many different face angles within the same label.
+- If predictions are unstable, retrain with cleaner examples.
+
+
+
+## Current Limitations
+
+- The model is trained directly in the browser and is not persistently saved after refreshing the page.
+- Results depend on lighting, camera angle, and camera quality.
+- This is a behavioral support tool, not a medical device.
+
+## Future Improvements
+
+- Save the trained model in browser storage.
+- Add a confidence bar for predictions.
+- Allow alert sound to be toggled on or off.
+- Improve the mobile layout further.
+- Add multilingual support for the UI and instructions.
+
+## Project Message
+
+The ultimate goal of the app is to help users recognize and reduce face-touching behavior, contributing to better hygiene habits and supporting disease prevention at both the personal and community level.
