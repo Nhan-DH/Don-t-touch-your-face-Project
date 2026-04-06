@@ -5,6 +5,10 @@
   justify-content: center;
 }
 
+.main.touched {
+  background-color: rgba(255, 0, 0, 0.5);
+}
+
 .video {
   width: 640px;
   height: 480px;
